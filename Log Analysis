@@ -1,0 +1,63 @@
+import os
+import re
+
+def analyze_logs_in_folder(folder_path, keywords, file_extension=".log"):
+    keyword_matches = {keyword: [] for keyword in keywords}
+
+    try:
+        for root, _, files in os.walk(folder_path):
+            for file in files:
+                if file.endswith(file_extension):
+                    log_file_path = os.path.join(root, file)
+                    analyze_single_log(log_file_path, keywords, keyword_matches)
+    except Exception as e:
+        print(f"An error occurred while analyzing logs: {e}")
+
+    return keyword_matches
+
+def analyze_single_log(log_file_path, keywords, keyword_matches):
+    try:
+        with open(log_file_path, 'r') as log_file:
+            log_lines = log_file.readlines()
+
+        for line_number, line in enumerate(log_lines, start=1):
+            for keyword in keywords:
+                if re.search(rf'\b{keyword}\b', line, re.IGNORECASE):
+                    keyword_matches[keyword].append((log_file_path, line_number, line.strip()))
+    except FileNotFoundError:
+        print(f"Error: The file '{log_file_path}' does not exist.")
+    except Exception as e:
+        print(f"Error while reading file '{log_file_path}': {e}")
+
+def save_results_to_file(keyword_matches, output_folder):
+    os.makedirs(output_folder, exist_ok=True)  # Create the output folder if it doesn't exist
+    output_file_path = os.path.join(output_folder, "log_analysis_results.txt")
+
+    try:
+        with open(output_file_path, 'w') as output_file:
+            for keyword, matches in keyword_matches.items():
+                output_file.write(f"\nKeyword: '{keyword}'\n")
+                if matches:
+                    for log_file_path, line_number, line in matches:
+                        output_file.write(f"File: {log_file_path}, Line {line_number}: {line}\n")
+                else:
+                    output_file.write("No occurrences found.\n")
+
+        print(f"Analysis results have been saved to: {output_file_path}")
+    except Exception as e:
+        print(f"An error occurred while writing to the output file: {e}")
+
+if __name__ == "__main__":
+    # Example usage
+    folder_path = "F:\\Logs\\CoreWebAPI_Logs"  # Replace with the path to your log folder
+    
+    keywords = ["Error", "fail", "warning", "Fatal", "Blocking", "Timeout", "Connection loss",
+                 "Inability to obtain or prepare a connection", "Connection loss" ,"Host timeout","Corrupt heap","Deadlock victim","Global heap corruption"
+                 ,"Allocation failures for net connections","Sink errors","- 500","- 503","- 400","- 408"]  # Keywords to search for
+    
+    file_extension = ".log"  # Change to the log file extension used in your folder
+    output_folder = "F:\\Logs\\CoreWebAPI_Logs\\Output"  # Replace with the path to your desired output folder
+
+    matches = analyze_logs_in_folder(folder_path, keywords, file_extension)
+    save_results_to_file(matches, output_folder)
+
