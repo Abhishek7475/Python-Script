@@ -1,0 +1,19 @@
+# Define the initial hex value and increment
+initial_hex = '100001'
+increment = 500_000
+steps = 9
+
+# Convert initial hex to decimal
+current_decimal = int(initial_hex, 16)
+
+# Store the results
+results = [format(current_decimal, 'X').upper()]
+
+# Generate the next steps
+for _ in range(steps):
+    current_decimal += increment
+    hex_value = format(current_decimal, 'X').upper()
+    results.append(hex_value)
+
+# Print results
+print("\n".join(results))
